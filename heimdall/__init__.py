@@ -4,20 +4,49 @@ import array
 import base64
 import hashlib
 import struct
+import argparse
 
 def main():
     '''
         Main entry point for our script.
     '''
 
-    secret_key = base64.b32decode(
-        'G5LADDFSBWZP5UXURERJ5SBZBYITZU22EH74MAWOBXLGC5KLI2H4KMBQUAYV7HL2'
+    parser = argparse.ArgumentParser(
+        description='Heimdall HOTP Generator.'
     )
 
-    # secret_key = '12345678901234567890'
+    parser.add_argument(
+        'secret_key',
+        help='Base32 encoded secret key'
+    )
 
-    # print secret_key
-    print get_htop(secret_key, get_counter())
+    parser.add_argument(
+        '--encoding',
+        # ['--encoding', '-e'],
+        help='Secret key encoding',
+        # dest='encoding',
+        default='base32',
+        choices=['base32', 'raw', 'base64']
+    )
+
+    args = parser.parse_args()
+
+    secret_key = None
+
+    if args.encoding is 'base32':
+        secret_key = base64.b32decode(
+            args.secret_key
+        )
+
+    elif args.encoding is 'base64':
+        secret_key = base64.b64decode(
+            args.secret_key
+        )
+
+    elif args.encoding is 'raw':
+        secret_key = args.secret_key
+
+    print "%06d" % get_hotp(secret_key, get_counter())
 
     exit(0)
 
@@ -54,7 +83,7 @@ def get_counter(t=0):
     return (int(time.time()) - t) / 30
 
 
-def get_htop(secret_key, counter):
+def get_hotp(secret_key, counter):
     '''
         Retrieve a HOTP
     '''
